@@ -3,28 +3,6 @@ from quart import websocket
 from isegame.game import ActionError, game_instance, GameStatus
 from . import app
 
-
-@app.route('/start', methods=['POST'])
-async def start():
-    try:
-        result = await game_instance.start_game()
-        return {"message": result.message}, result.status_code
-    except ActionError as e:
-        return {"message": e.message}, e.status_code
-
-@app.route('/stop', methods=['POST'])
-async def stop():
-    try:
-        result = await game_instance.stop_game()
-        return {"message": result.message}, result.status_code
-    except ActionError as e:
-        return {"message": e.message}, e.status_code
-
-@app.route('/running', methods=['GET'])
-async def running():
-    """Checks if the game is running."""
-    return game_instance.current_game is not None
-
 @app.websocket('/ws')
 async def ws():
     """WebSocket route for handling user connection and actions."""
