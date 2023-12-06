@@ -11,6 +11,7 @@ quart = "^0.19.4"
 asyncio = "^3.4.3"
 hypercorn = "^0.15.0"
 quart-schema = "^0.18.0"
+sense-hat = "^2.6.0"
 
 
 [build-system]

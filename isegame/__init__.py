@@ -5,8 +5,13 @@ import asyncio
 from quart_schema import QuartSchema
 from quart import Quart, jsonify, send_from_directory
 import os
-from . import ui
+# from . import ui
 import argparse
+
+from isegame.game import game_instance
+
+from sense_hat import SenseHat
+sense = SenseHat()
 
 app = Quart(__name__)
 QuartSchema(app, convert_casing=True)
@@ -44,9 +49,27 @@ async def main() -> None:
     config.accesslog = "-"
     config.bind = ["0.0.0.0:3001"]
 
-    if args.debug:
-        loop = asyncio.get_event_loop()
-        ui.DebugGui(loop)
+    async def controls():
+        while True:
+            try:
+                for event in sense.stick.get_events():
+                    if event.action != "pressed":
+                        continue
+
+                    if event.direction == "up":
+                        await game_instance.start_game()
+                    elif event.direction == "down":
+                        await game_instance.stop_game()
+            except:
+                pass
+
+            await asyncio.sleep(1/120)
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(controls())
+
+    # if args.debug:
+    #     ui.DebugGui(loop)
 
     await serve(app, config)
 
