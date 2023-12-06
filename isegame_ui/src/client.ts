@@ -12,6 +12,9 @@ export interface Question {
 export interface GameState {
   scores: { [id: string]: number }
   status: "round" | "paused"
+  // The amount of spaces each user should move
+  // This is only sent when the game status is paused (round over)
+  move_spaces?: { [id: string]: number }
 }
 
 type SendSocketMessage =

@@ -62,7 +62,11 @@ function App() {
   const toast = useToast()
 
   useEffect(() => {
-    SocketClient.createClient("ws://localhost:3001/ws").then(socket => {
+    const socketUrl = import.meta.env.MODE === "development"
+      ? "ws://localhost:3001/ws"
+      : `ws://${window.location.host}/ws`
+
+    SocketClient.createClient(socketUrl).then(socket => {
       setSocket(socket)
 
       socket.on("clients", ({ clients }) => setClients(clients))
@@ -110,7 +114,7 @@ function App() {
                 {state ? <>
                   {state.status == "round"
                     ? <QuestionDisplay question={question!} socket={socket} correct={correct} />
-                    : <Leaderboard users={clients} scores={state.scores} />}
+                    : <Leaderboard users={clients} state={state} />}
                 </> : <CardList users={clients} />}
               </Box> : <JoinScreen socket={socket} clients={clients} />
             )
@@ -197,8 +201,8 @@ const QuestionDisplay = ({
   )
 }
 
-const Leaderboard = ({ users, scores }: { users: User[], scores: Record<string, number> }) => {
-  const sorted = users.sort((a, b) => scores[b.id] - scores[a.id])
+const Leaderboard = ({ users, state }: { users: User[], state: GameState }) => {
+  const sorted = users.sort((a, b) => state.scores[b.id] - state.scores[a.id])
 
   return (
     <VStack>
@@ -208,13 +212,15 @@ const Leaderboard = ({ users, scores }: { users: User[], scores: Record<string, 
           <Tr>
             <Th>Name</Th>
             <Th>Score</Th>
+            <Th>Move Spaces</Th>
           </Tr>
         </Thead>
         <Tbody>
           {sorted.map((user) => (
             <Tr key={user.id}>
               <Td>{pieceMap[user.piece]} {user.name}</Td>
-              <Td>{scores[user.id]}</Td>
+              <Td>{state.scores[user.id]}</Td>
+              <Td>{state.move_spaces?.[user.id]}</Td>
             </Tr>
           ))}
         </Tbody>

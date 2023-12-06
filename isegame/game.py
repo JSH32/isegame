@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from random import randint, shuffle
 import time
-from typing import Callable, List, NamedTuple, Optional, Dict, Self
+from typing import List, NamedTuple, Optional, Dict, Self
 import uuid
 from quart import Websocket
 
@@ -72,13 +72,51 @@ class GameStatus(Enum):
 
 @dataclass
 class GameState:
+    # Last score from previous round, updated after calculation of how much to move forward
+    last_scores: Dict[uuid.UUID, int] = field(default_factory=dict)
     scores: Dict[uuid.UUID, int] = field(default_factory=dict)
     questions: Dict[uuid.UUID, Question] = field(default_factory=dict)
     start_time: float = field(default=0)
     status: GameStatus = field(default=GameStatus.PAUSED)
-
+    
     def to_dict(self):
-        return {"scores": {str(user_id): score for user_id, score in self.scores.items()}, "status": self.status}
+        move_spaces = None
+        max_moves_per_round = 5
+
+        if self.status == GameStatus.PAUSED:
+            move_spaces = {}
+
+            # Two move algorithms due to skewed distribution of scores with less than 3 players.
+            if len(self.scores) < 3:
+                # Calculate moves based on score of each player seperately.
+                for user_id, score in self.scores.items():
+                    if user_id in self.last_scores:
+                        delta_score = score - self.last_scores[user_id]
+                        move_spaces[user_id] = min(max_moves_per_round, (delta_score // 6) + 1) if delta_score > 0 else 0
+                    
+                    else:
+                        move_spaces[user_id] = min(max_moves_per_round, (score // 6) + 1) if score > 0 else 0
+
+            else:
+                # Calculate moves based on average score of all players.
+                avg_score = sum(self.scores.values()) / max(1, len(self.scores.values()))
+                for user_id, score in self.scores.items():
+                    if user_id in self.last_scores:
+                        delta_score = score - self.last_scores[user_id]
+                        score_proportion = delta_score / avg_score if avg_score > 0 else 0
+                        move_spaces[user_id] = round(max_moves_per_round * score_proportion)
+                    else:
+                        score_proportion = score / avg_score if avg_score > 0 else 0
+                        move_spaces[user_id] = round(max_moves_per_round * score_proportion)
+
+            for user_id, score in self.scores.items():
+                self.last_scores[user_id] = score
+
+        return {
+            "scores": {str(user_id): score for user_id, score in self.scores.items()}, 
+            "status": self.status, 
+            "move_spaces": {str(user_id): spaces for user_id, spaces in move_spaces.items()} if move_spaces else None
+        }
                 
     def generate_question(self, user_id: uuid.UUID) -> Question:
         """Generates a new question for the given user."""
@@ -115,9 +153,6 @@ class Game:
     timer: int
     timer_task: Optional[asyncio.Task]
 
-    # A callback that gets called every time the state changes
-    game_callback: Optional[Callable[[Self], None]]
-
     def __init__(self):
         self.users = []
         self.connections = []
@@ -149,6 +184,7 @@ class Game:
         if self.current_game is not None and self.current_game.status == GameStatus.ROUND:
             self.current_game.status = GameStatus.PAUSED
             await self.broadcast_state()
+            self.current_game.last_scores = self.current_game.scores.copy()
 
     async def broadcast_timer_update(self, remaining_time):
         """Sends an update message with the timer status to all connections."""
@@ -175,6 +211,7 @@ class Game:
             self.current_game.start_time = time.time()
             self.current_game.status = GameStatus.ROUND
             self.current_game.scores = {user.id: 0 for user in self.users}
+            self.current_game.last_scores = {user.id: 0 for user in self.users}
 
         for user in self.users:            
             question = self.current_game.generate_question(user.id)
@@ -200,6 +237,7 @@ class Game:
         if self.timer_task is not None:
             self.timer = 0
             self.timer_task.cancel()
+            await self.broadcast_timer_update(0)
 
         self.current_game = None
         for user in self.users:
