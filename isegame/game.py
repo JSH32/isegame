@@ -98,15 +98,16 @@ class GameState:
                         move_spaces[user_id] = min(max_moves_per_round, (score // 6) + 1) if score > 0 else 0
 
             else:
-                # Calculate moves based on average score of all players.
-                avg_score = sum(self.scores.values()) / max(1, len(self.scores.values()))
+                # Calculate moves based on score of highest players.
+                max_moves_per_round = 5
+                highest_score = max(self.scores.values()) if self.scores else 0
                 for user_id, score in self.scores.items():
                     if user_id in self.last_scores:
                         delta_score = score - self.last_scores[user_id]
-                        score_proportion = delta_score / avg_score if avg_score > 0 else 0
+                        score_proportion = delta_score / highest_score if highest_score > 0 else 0
                         move_spaces[user_id] = round(max_moves_per_round * score_proportion)
                     else:
-                        score_proportion = score / avg_score if avg_score > 0 else 0
+                        score_proportion = score / highest_score if highest_score > 0 else 0
                         move_spaces[user_id] = round(max_moves_per_round * score_proportion)
 
             for user_id, score in self.scores.items():
