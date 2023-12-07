@@ -42,7 +42,7 @@ args = parser.parse_args()
 async def main() -> None:
     config = Config()
     config.accesslog = "-"
-    config.bind = ["0.0.0.0:3001"]
+    config.bind = ["0.0.0.0:3000"]
 
     loop = asyncio.get_event_loop()
 

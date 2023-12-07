@@ -22,12 +22,12 @@ play_button = [
 # Define pause button (two vertical lines)
 pause_button = [
     black, black, black, black, black, black, black, black,
-    black, white, black, black, black, black, white, black,
-    black, white, black, black, black, black, white, black,
-    black, white, black, black, black, black, white, black,
-    black, white, black, black, black, black, white, black,
-    black, white, black, black, black, black, white, black,
-    black, white, black, black, black, black, white, black,
+    black, white, white, black, black, white, white, black,
+    black, white, white, black, black, white, white, black,
+    black, white, white, black, black, white, white, black,
+    black, white, white, black, black, white, white, black,
+    black, white, white, black, black, white, white, black,
+    black, white, white, black, black, white, white, black,
     black, black, black, black, black, black, black, black
 ]
 
