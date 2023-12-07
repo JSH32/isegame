@@ -132,7 +132,7 @@ const Bar = ({ user, state, timer }: { user: User, state?: GameState, timer: num
         <Flex h={16} alignItems='center'>
           <Box fontSize="2xl"><b>{pieceMap[user.piece]} {user.name}</b></Box>
           <Spacer />
-          {state !== undefined && <Box>{state.scores[user.id]}</Box>}
+          {(state !== undefined && state.scores[user.id] !== undefined)  && <Box>{state.scores[user.id]}</Box>}
           {timer &&
             <Box
               fontSize="xl"
