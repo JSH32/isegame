@@ -60,7 +60,7 @@ async def sense_interface():
             if event.action != "pressed":
                 continue
 
-            if event.direction == "up" and not game_instance.current_game or game_instance.current_game.status != GameStatus.ROUND:
+            if event.direction == "up" and not game_instance.current_game or game_instance.current_game and game_instance.current_game.status != GameStatus.ROUND:
                 await game_instance.start_game()
             elif event.direction == "down" and game_instance.current_game:
                 await game_instance.stop_game()

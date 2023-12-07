@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from random import randint, shuffle
 import time
-from typing import List, NamedTuple, Optional, Dict, Self
+from typing import List, NamedTuple, Optional, Dict
 import uuid
 from quart import Websocket
 
